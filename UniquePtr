@@ -1,0 +1,91 @@
+#include <stdexcept>
+#include <string>
+#include <vector>
+#include <iostream>
+#include <map>
+#include <string>
+#include <tuple>
+#include <vector>
+#include <algorithm>
+#include <queue>
+#include <string_view>
+#include <cmath>
+#include <numeric>
+#include <cassert>
+#include <memory>
+
+template<typename T, class Deleter = std::default_delete<T>>
+class UniquePtr {
+private:
+    std::tuple<T*, Deleter> data;
+
+public:
+    UniquePtr(T* t1, Deleter del) : data({t1, del}) {}
+
+    UniquePtr(T* t1) : data({t1, Deleter()}) {}
+
+    UniquePtr() : data(nullptr, Deleter()) {}
+
+    UniquePtr(UniquePtr& other) = delete;
+
+    UniquePtr(UniquePtr&& other) noexcept {
+        data = other.data;
+        std::get<0>(other.data) = nullptr;
+    }
+
+    UniquePtr& operator=(UniquePtr&& other) noexcept {
+        swap(other);
+        return *this;
+    }
+
+    UniquePtr& operator=(std::nullptr_t) noexcept {
+        std::get<1>(data)(std::get<0>(data));
+        std::get<0>(data) = nullptr;
+        return *this;
+    }
+
+    Deleter& get_deleter() noexcept {
+        return std::get<1>(data);
+    }
+
+    const Deleter& get_deleter() const noexcept {
+        return std::get<1>(data);
+    }
+
+    const T* operator -> () const noexcept {
+        return std::get<0>(data);
+    }
+
+    const T& operator * () const noexcept {
+        return *std::get<0>(data);
+    }
+
+    void reset(T * ptr) noexcept {
+        if (std::get<0>(data) != ptr) {
+            std::get<1>(data)(std::get<0>(data));
+            std::get<0>(data) = ptr;
+        }
+    }
+
+    T* release() noexcept {
+        T* t1 = std::get<0>(data);
+        std::get<0>(data) = nullptr;
+        return t1;
+    }
+
+    void swap(UniquePtr& other) noexcept {
+        std::swap(data, other.data);
+    }
+
+    T* get() const noexcept {
+        return std::get<0>(data);
+    }
+
+    explicit operator bool() const noexcept {
+        return std::get<0>(data) != nullptr;
+    }
+
+    ~UniquePtr() {
+        std::get<1>(data)(std::get<0>(data));
+    }
+};
