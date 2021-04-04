@@ -1,0 +1,95 @@
+#include <iostream>
+#include <cmath>
+
+class Complex {
+private:
+    double real;
+    double imag;
+
+public:
+    Complex(double re = 0, double im = 0) {
+        real = re;
+        imag = im;
+    }
+
+    Complex operator+ () const {
+        return {real, imag};
+    }
+
+    Complex operator- () const {
+        return {-real, -imag};
+    }
+
+    double Re() const {
+        return real;
+    }
+
+    double Im() const {
+        return imag;
+    }
+
+    Complex& operator+= (const Complex& x) {
+        *this = *this + x;
+        return *this;
+    }
+
+    Complex& operator-= (const Complex& x) {
+        *this = *this - x;
+        return *this;
+    }
+
+    Complex& operator*= (const Complex& x) {
+        *this = *this * x;
+        return *this;
+    }
+
+    Complex& operator/= (const Complex& x) {
+        *this = *this / x;
+        return *this;
+    }
+
+    friend Complex operator/ (const Complex& a, const Complex& b);
+
+    friend Complex operator+ (const Complex& a, const Complex& b);
+
+    friend Complex operator* (const Complex& a, const Complex& b);
+
+    friend Complex operator- (const Complex& a, const Complex& b);
+};
+
+double Abs(const Complex& a) {
+    return sqrt(a.Im() * a.Im() + a.Re() * a.Re());
+}
+
+Complex operator/ (const Complex& a, const Complex& b) {
+    double ans_im = (a.Im()*b.Re() - b.Im()*a.Re()) / (b.Re()*b.Re() + b.Im()*b.Im());
+    double ans_re = (a.Re()*b.Re() + a.Im()*b.Im()) / (b.Re()*b.Re() + b.Im()*b.Im());
+    return {ans_re, ans_im};
+}
+
+Complex operator* (const Complex& a, const Complex& b) {
+    double ans_im = a.Im()*b.Re() + b.Im()*a.Re();
+    double ans_re = a.Re()*b.Re() - a.Im()*b.Im();
+    return {ans_re, ans_im};
+}
+
+Complex operator- (const Complex& a, const Complex& b) {
+    double ans_im = a.Im() - b.Im();
+    double ans_re = a.Re() - b.Re();
+    return {ans_re, ans_im};
+}
+
+Complex operator+ (const Complex& a, const Complex& b) {
+    double ans_im = a.Im() + b.Im();
+    double ans_re = a.Re() + b.Re();
+    return {ans_re, ans_im};
+}
+
+bool operator== (const Complex& a, const Complex& b) {
+    return a.Im() == b.Im() && a.Re() == b.Re();
+}
+
+bool operator!= (const Complex& a, const Complex& b) {
+    return a.Im() != b.Im() || a.Re() != b.Re();
+}
+
