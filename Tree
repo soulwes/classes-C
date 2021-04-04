@@ -1,0 +1,62 @@
+#include <iostream>
+#include <map>
+#include <string>
+#include <tuple>
+#include <vector>
+#include <algorithm>
+#include <queue>
+#include <string_view>
+#include <cmath>
+#include <numeric>
+#include <cassert>
+
+struct Node {
+    std::map<std::string, Node> children;
+};
+
+class Tree {
+private:
+    Node root;
+
+public:
+    bool Has(const std::vector<std::string>& node) const;
+
+    void Insert(const std::vector<std::string>& node);
+
+    void Delete(const std::vector<std::string>& node);
+};
+
+bool Tree::Has(const std::vector<std::string>& node) const {
+    auto current = &root;
+    for (const auto& name : node) {
+        auto it = current->children.find(name);
+        if (it == current->children.end()) {
+            return false;
+        }
+        current = &it->second;
+    }
+    return true;
+}
+
+void Tree::Insert(const std::vector<std::string>& node) {
+    auto current = &root;
+    for (const auto& name : node) {
+        current = &current->children[name];
+    }
+}
+
+void Tree::Delete(const std::vector<std::string>& node) {
+    if (node.empty()) {
+        root.children.clear();  // root = Node();
+        return;
+    }
+    auto current = &root;
+    for (size_t i = 0; i + 1 < node.size(); ++i) {
+        auto it = current->children.find(node[i]);
+        if (it == current->children.end()) {
+            return;
+        }
+        current = &it->second;
+    }
+    current->children.erase(node.back());
+}
