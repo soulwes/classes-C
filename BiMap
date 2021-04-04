@@ -1,0 +1,82 @@
+#include <stdexcept>
+#include <optional>
+#include <iostream>
+#include <map>
+#include <string>
+#include <tuple>
+#include <vector>
+#include <algorithm>
+#include <queue>
+#include <string_view>
+#include <cmath>
+#include <numeric>
+#include <cassert>
+
+template <typename Key1, typename Key2, typename Value>
+class BiMap {
+private:
+    std::map<Key1, int> map_key1;
+    std::map<Key2, int> map_key2;
+    std::vector<Value> val;
+
+public:
+    // Вставить значение, указав один или оба ключа.
+    // Генерирует исключение std::invalid_argument("some text") в случае,
+    // если оба ключа пусты, либо один из ключей уже имеется в хранилище.
+    void Insert(const std::optional<Key1>& key1,
+                const std::optional<Key2>& key2, const Value& value) {
+        if (key1 && map_key1.find(key1.value()) != map_key1.end()) {
+            throw std::invalid_argument("some text");
+        }
+        if (key2 && map_key2.find(key2.value()) != map_key2.end()) {
+            throw std::invalid_argument("some text");
+        }
+        if (!key1 && !key2) {
+            throw std::invalid_argument("some text");
+        }
+        val.push_back(value);
+        if (key1) {
+            map_key1[key1.value()] = val.size() - 1;
+        }
+        if (key2) {
+            map_key2[key2.value()] = val.size() - 1;
+        }
+    }
+
+    // Получить значение по ключу первого типа.
+    // Генерирует исключение std::out_of_range("some text")
+    // в случае отсутствия ключа (как и функция at в std::map).
+    Value& GetByPrimaryKey(const Key1& key) {
+        auto it = map_key1.find(key);
+        if (it == map_key1.end()) {
+            throw std::out_of_range("some text");
+        }
+        return val[map_key1[key]];
+    }
+
+    const Value& GetByPrimaryKey(const Key1& key) const {
+        auto it = map_key1.find(key);
+        if (it == map_key1.end()) {
+            throw std::out_of_range("some text");
+        }
+        return val[map_key1[key]];
+    }
+
+    // Аналогичная функция для ключа второго типа.
+    Value& GetBySecondaryKey(const Key2& key) {
+        auto it = map_key2.find(key);
+        if (it == map_key2.end()) {
+            throw std::out_of_range("some text");
+        }
+        return val[map_key2[key]];
+    }
+
+    const Value& GetBySecondaryKey(const Key2& key) const {
+        auto it = map_key2.find(key);
+        if (it == map_key2.end()) {
+            throw std::out_of_range("some text");
+        }
+        return val[map_key2[key]];
+    }
+};
+
