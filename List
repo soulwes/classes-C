@@ -1,0 +1,165 @@
+#include <iostream>
+#include <memory>
+
+
+// using T = int;
+
+struct Node {
+    Node* left;
+    Node* right;
+
+    virtual ~Node() = default;
+};
+
+template <class T>
+struct ListNode : public Node {
+    T value;
+
+    ListNode() = default;
+
+    ListNode(const T& value1) : value(value1) {}
+
+    ListNode(T && value1) : value(std::move(value1)) {
+    }
+};
+
+template <class T = int>
+class List {
+private:
+    class Iterator {
+    private:
+        Node* x;
+
+    public:
+        Iterator(Node* y) : x(y) {}
+
+        Iterator& operator++ () {
+            x = x->right;
+            return *this;
+        }
+
+        Iterator& operator++ (int) {
+            auto y = *this;
+            x = x->right;
+            return y;
+        }
+
+        Iterator& operator-- () {
+            x = x->left;
+            return *this;
+        }
+
+        Iterator& operator-- (int) {
+            auto y = *this;
+            x = x->left;
+            return y;
+        }
+
+        T& operator *() {
+            return (static_cast<ListNode<T>*>(x))->value;
+        }
+
+        friend bool operator== (const Iterator& a, const Iterator& b) {
+            return (a.x == b.x);
+        }
+
+        friend bool operator!= (const Iterator& a, const Iterator& b) {
+            return !(a.x == b.x);
+        }
+    };
+
+    static void Link(Node* node, Node* where) {
+        auto right = where->right;
+        right->left = node;
+        where->right = node;
+        node->right = right;
+        node->left = where;
+    }
+
+    static void Unlink(Node* node) {
+        auto left = node->left;
+        auto right = node->right;
+        left->right = right;
+        right->left = left;
+        delete node;
+    }
+
+    Node* dummy_;
+    size_t size_ = 0;
+
+public:
+    List() : dummy_(new Node()) {
+        dummy_->left = dummy_;
+        dummy_->right = dummy_;
+    }
+
+    List(const List& other) : dummy_(new Node()) {
+        dummy_->left = dummy_;
+        dummy_->right = dummy_;
+        for (const T& node : other) {
+            (*this).push_back(node);
+        }
+    }
+
+    List& operator=(const List& other) {
+        while (size_ != 0) {
+            (*this).pop_front();
+        }
+        for (const T& node : other) {
+            (*this).push_back(node);
+        }
+        return (*this);
+    }
+
+    ~List() {
+        auto cur = dummy_->right;
+        while (cur != dummy_) {
+            auto next = cur->right;
+            delete cur;
+            cur = next;
+        }
+        delete dummy_;
+    }
+
+    void push_back(const T& value) {
+        auto node = new ListNode(value);
+        Link(node, dummy_->left);
+        ++size_;
+    }
+
+    void push_front(const T& value) {
+        auto node = new ListNode(value);
+        Link(node, dummy_);
+        ++size_;
+    }
+
+    void pop_back() {
+        Unlink(dummy_->left);
+        --size_;
+    }
+
+    void pop_front() {
+        Unlink(dummy_->right);
+        --size_;
+    }
+
+    size_t size() const {
+        return size_;
+    }
+
+    const T& front() const {
+        return static_cast<ListNode<T>*>(dummy_->right)->value;
+    }
+
+    const T& back() const {
+        return static_cast<ListNode<T>*>(dummy_->left)->value;
+    }
+
+    Iterator end() const {
+        return Iterator(dummy_);
+    }
+
+    Iterator begin() const {
+        return Iterator(dummy_->right);
+    }
+};
