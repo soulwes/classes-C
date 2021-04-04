@@ -1,0 +1,146 @@
+#include <algorithm>
+#include <cassert>
+#include <iostream>
+#include <memory>
+#include <string_view>
+
+template <typename T = int>
+class Vector {
+private:
+    T* data = nullptr;
+    size_t sz = 0;
+    size_t cp = 0;
+
+    T* Allocate(size_t n) {
+        return reinterpret_cast<T*>(operator new(n * sizeof(T)));
+    }
+
+    void Dellocate(T* ptr) {
+        operator delete(ptr);
+    }
+
+public:
+    explicit Vector(size_t size = 0) : data(Allocate(size)), sz(size), cp(size) {
+        try {
+            std::uninitialized_value_construct_n(data, size);
+        } catch (...) {
+            Dellocate(data);
+            throw;
+        }
+    }
+
+    Vector(const Vector& other) : sz(other.sz), cp(other.sz) {
+        if (sz == 0) {
+            return;
+        }
+        data = Allocate(other.sz);
+        try {
+            std::uninitialized_copy_n(other.data, other.sz, data);
+        } catch (...) {
+            Dellocate(data);
+            throw;
+        }
+    }
+
+    Vector& operator=(Vector other) {
+        swap(other);
+        return *this;
+    }
+
+    void reserve(size_t size) {
+        if (cp < size) {
+            T* new_data = Allocate(size);
+            try {
+                std::uninitialized_copy_n(data, sz, new_data);
+                std::destroy_n(data, sz);
+                Dellocate(data);
+                cp = size;
+                data = new_data;
+            } catch (...) {
+                Dellocate(new_data);
+                throw;
+            }
+        }
+    }
+
+    void resize(size_t size) {
+        reserve(size);
+        if (sz < size) {
+            std::uninitialized_value_construct(data + sz, data + size);
+        } else if (sz > size) {
+            std::destroy(data + size, data + sz);
+        }
+        sz = size;
+    }
+
+    void swap(Vector& other) {
+        std::swap(data, other.data);
+        std::swap(cp, other.cp);
+        std::swap(sz, other.sz);
+    }
+
+    void clear() {
+        std::destroy(data, data + sz);
+        sz = 0;
+    }
+
+    void push_back(const T& elem) {
+        if (sz == cp) {
+            size_t new_cp = (cp == 0) ? 1 : cp * 2;
+            reserve(new_cp);
+        }
+        new(data + sz) T(elem);
+        ++sz;
+    }
+
+    void push_back(T&& elem) {
+        if (sz == cp) {
+            size_t new_cp = (cp == 0) ? 1 : cp * 2;
+            reserve(new_cp);
+        }
+        new(data + sz) T(std::move(elem));
+        ++sz;
+    }
+
+    void pop_back() {
+        --sz;
+        (data + sz)->~T();
+    }
+
+    T* begin() {
+        return data;
+    }
+
+    const T* begin() const {
+        return data;
+    }
+
+    T* end() {
+        return data + sz;
+    }
+
+    const T* end() const {
+        return data + sz;
+    }
+
+    size_t size() const {
+        return sz;
+    }
+
+    size_t capacity() const {
+        return cp;
+    }
+
+    const T& operator[](size_t index) const {
+        return data[index];
+    }
+
+    T& operator[](size_t index) {
+        return data[index];
+    }
+
+    ~Vector() {
+        std::destroy_n(data, sz);
+        operator delete(data);
+    }
+};
