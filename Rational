@@ -1,0 +1,120 @@
+#include <iostream>
+#include <numeric>
+
+class Rational {
+private:
+    int num;
+    int den;
+
+public:
+    Rational(int num1 = 0, int den1 = 1) {
+        int del = std::gcd(num1, den1);
+        if (den1 < 0) {
+            num = (-1) * num1 / del;
+            den = (-1) * den1 / del;
+        } else {
+            num = num1 / del;
+            den = den1 / del;
+        }
+    }
+
+    Rational operator+ () const {
+        return {num, den};
+    }
+
+    Rational operator- () const {
+        return {-num, den};
+    }
+
+    Rational& operator+= (const Rational& x) {
+        *this = *this + x;
+        return *this;
+    }
+
+    Rational& operator-= (const Rational& x) {
+        *this = *this - x;
+        return *this;
+    }
+
+    Rational& operator*= (const Rational& x) {
+        *this = *this * x;
+        return *this;
+    }
+
+    Rational& operator/= (const Rational& x) {
+        *this = *this / x;
+        return *this;
+    }
+
+    Rational& operator-- () {
+        this->num -= this->den;
+        return *this;
+    }
+
+    Rational& operator++ () {
+        this->num += this->den;
+        return *this;
+    }
+
+    Rational operator-- (int) {
+        Rational x(*this);
+        this->num -= this->den;
+        return x;
+    }
+
+    Rational operator++ (int) {
+        Rational x(*this);
+        this->num += this->den;
+        return x;
+    }
+
+    int Numerator() const {
+        return num;
+    }
+
+    int Denominator() const {
+        return den;
+    }
+
+    friend Rational operator/ (const Rational& a, const Rational& b);
+
+    friend Rational operator* (const Rational& a, const Rational& b);
+
+    friend Rational operator+ (const Rational& a, const Rational& b);
+
+    friend Rational operator- (const Rational& a, const Rational& b);
+};
+
+
+bool operator== (const Rational& a, const Rational& b) {
+    return a.Numerator() == b.Numerator() && a.Denominator() == b.Denominator();
+}
+
+bool operator!= (const Rational& a, const Rational& b) {
+    return a.Numerator() != b.Numerator() || a.Denominator() != b.Denominator();
+}
+
+Rational operator+ (const Rational& a, const Rational& b) {
+    int ans_num = a.Numerator() * b.Denominator() + b.Numerator() * a.Denominator();
+    int ans_den = a.Denominator() * b.Denominator();
+    return {ans_num, ans_den};
+}
+
+Rational operator- (const Rational& a, const Rational& b) {
+    int ans_num = a.Numerator() * b.Denominator() - b.Numerator() * a.Denominator();
+    int ans_den = a.Denominator() * b.Denominator();
+    return {ans_num, ans_den};
+}
+
+Rational operator/ (const Rational& a, const Rational& b) {
+    int ans_num = a.Numerator() * b.Denominator();
+    int ans_den = a.Denominator() * b.Numerator();
+    return {ans_num, ans_den};
+}
+
+Rational operator* (const Rational& a, const Rational& b) {
+    int ans_num = a.Numerator() * b.Numerator();
+    int ans_den = a.Denominator() * b.Denominator();
+    return {ans_num, ans_den};
+}
+
