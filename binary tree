@@ -1,0 +1,167 @@
+#include <iostream>
+#include <map>
+#include <set>
+#include <string>
+#include <tuple>
+#include <vector>
+#include <algorithm>
+#include <queue>
+#include <string_view>
+#include <cmath>
+#include <numeric>
+#include <cassert>
+#include <memory>
+
+
+
+class Node {
+public:
+    Node() = default;
+
+    Node(int value, std::shared_ptr<Node> left, std::shared_ptr<Node> right, std::shared_ptr<Node> parent, int deep):
+            value(value), left(left), right(right), parent(parent), deep(deep) {
+    }
+    int value;
+    int num = 1;
+    std::shared_ptr<Node> left, right, parent;
+    int deep;
+};
+
+class Tree {
+private:
+    std::shared_ptr<Node> root = nullptr;
+    int deep = 0;
+
+public:
+    void add(std::shared_ptr<Node>& node, int value) {
+        if (node == nullptr) {
+            root = std::make_shared<Node>(value, nullptr, nullptr, nullptr, 1);
+            return;
+        }  else if (node->value > value) {
+            if (node->left == nullptr) {
+                node->left = std::make_shared<Node>(value, nullptr, nullptr, node, 1);
+                if (node->right != nullptr) {
+                    node->deep = std::max(node->right->deep, node->left->deep) + 1;
+                } else {
+                    node->deep = node->left->deep + 1;
+                }
+                return;
+            } else {
+                add(node->left, value);
+                if (node->right != nullptr) {
+                    node->deep = std::max(node->right->deep, node->left->deep) + 1;
+                } else {
+                    node->deep = node->left->deep + 1;
+                }
+                return;
+            }
+        } else if (node->value < value) {
+            if (node->right == nullptr) {
+                node->right = std::make_shared<Node>(value, nullptr, nullptr, node, 1);
+                if (node->left != nullptr) {
+                    node->deep = std::max(node->right->deep, node->left->deep) + 1;
+                } else {
+                    node->deep = node->right->deep + 1;
+                }
+                return;
+            } else {
+                add(node->right, value);
+                if (node->left != nullptr) {
+                    node->deep = std::max(node-> right->deep, node->left->deep) + 1;
+                } else {
+                    node->deep = node->right->deep + 1;
+                }
+                return;
+            }
+        } else {
+            node->num += 1;
+            return;
+        }
+    }
+
+
+    int deep_tree() {
+        return root->deep;
+    }
+
+    std::shared_ptr<Node>& root_tree() {
+        return root;
+    }
+
+    int parent_node(std::shared_ptr<Node>& node) {
+        return node->parent->value;
+    }
+
+    std::shared_ptr<Node>& max(std::shared_ptr<Node>& node) {
+
+        if (node->right == nullptr) {
+            return node;
+        } else {
+            return max(node->right);
+        }
+    }
+
+    std::shared_ptr<Node>& min(std::shared_ptr<Node>& node) {
+        if (node->left == nullptr) {
+            return node;
+        } else {
+            return min(node->left);
+        }
+    }
+
+    std::shared_ptr<Node>& prev(std::shared_ptr<Node> node) {
+        if (node->left != nullptr) {
+            return max(node->left);
+        } else {
+            while (node->parent->left == node) {
+                node = node->parent;
+            }
+            return node->parent;
+        }
+    }
+
+    std::shared_ptr<Node>& next(std::shared_ptr<Node> node) {
+        if (node->right != nullptr) {
+            return min(node->right);
+        } else {
+            while (node->parent->right == node) {
+                node = node->parent;
+            }
+            return node->parent;
+        }
+    }
+
+    void leaf(std::shared_ptr<Node>& node, std::vector<std::shared_ptr<Node>>& ans) {
+        if (node->left != nullptr) {
+            leaf(node->left,ans);
+        }
+        if (node->right != nullptr) {
+            leaf(node->right, ans);
+        }
+        if (node->right == nullptr && node->left == nullptr) {
+            ans.push_back(node);
+        }
+        return;
+    }
+
+    bool AVL (std::shared_ptr<Node>& node) {
+        if (node->right != nullptr && node->left != nullptr) {
+            if (std::abs(node->right->deep - node->left->deep) > 1) {
+                return false;
+            }
+        }
+        if (node->right != nullptr && !AVL(node->right)) {
+            return false;
+        }
+        if (node->right != nullptr && node->right->deep > 1 && node->left == nullptr) {
+            return false;
+        }
+        if (node->left != nullptr && !AVL(node->left)) {
+            return false;
+        }
+        if (node->left != nullptr && node->left->deep > 1 && node->right == nullptr) {
+            return false;
+        }
+        return true;
+    }
+};
