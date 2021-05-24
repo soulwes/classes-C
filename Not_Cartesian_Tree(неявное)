@@ -1,0 +1,128 @@
+#include <iostream>
+#include <map>
+#include <set>
+#include <string>
+#include <tuple>
+#include <vector>
+#include <algorithm>
+#include <queue>
+#include <string_view>
+#include <cmath>
+#include <cassert>
+#include <memory>
+#include <random>
+#define int long long
+
+std::mt19937 rnd(228);
+
+
+class Node {
+public:
+    Node() = default;
+
+    Node(int value, int prior,
+         std::shared_ptr<Node> left = nullptr, std::shared_ptr<Node> right= nullptr):
+            value(value), left(left), right(right), prior(prior), cnt(1) {
+    }
+    int cnt;
+    int64_t value;
+    int prior;
+    int64_t sum = 0;
+    bool rev = false;
+    std::shared_ptr<Node> left, right;
+};
+
+class Not_Cartesian_Tree {
+public:
+    std::shared_ptr<Node> root = nullptr;
+
+    int cnt (std::shared_ptr<Node> it) {
+        return it ? it->cnt : 0;
+    }
+
+    void upd_cnt (std::shared_ptr<Node> it) {
+        if (it) {
+            it->cnt = cnt(it->left) + cnt(it->right) + 1;
+            it->sum = it->value;
+            if (it->right) {
+                it->sum += it->right->sum;
+            }
+            if (it->left) {
+                it->sum += it ->left->sum;
+            }
+        }
+    }
+
+    void rev_check (std::shared_ptr<Node> it) {
+        if (it && it->rev) {
+            it->rev = false;
+            swap (it->left, it->right);
+            if (it->left) {
+                it->left->rev ^= true;
+            }
+            if (it->right) {
+                it->right->rev ^= true;
+            }
+        }
+    }
+
+    void merge (std::shared_ptr<Node>& t, std::shared_ptr<Node> l, std::shared_ptr<Node> r) {
+        rev_check(l);
+        rev_check(r);
+        if (!l || !r) {
+            if (l) {
+                t = l;
+            } else {
+                t = r;
+            }
+        } else if (l->prior > r->prior) {
+            merge(l->right, l->right, r), t = l;
+        } else {
+            merge(r->left, l, r->left), t = r;
+        }
+        upd_cnt (t);
+    }
+
+    void split (std::shared_ptr<Node> t, std::shared_ptr<Node> & l, std::shared_ptr<Node> & r, int key, int add = 0) {
+        if (!t) {
+            return void(l = r = 0);
+        }
+        rev_check(t);
+        int cur_key = add + cnt(t->left);
+        if (key <= cur_key) {
+            split(t->left, l, t->left, key, add), r = t;
+        } else {
+            split(t->right, t->right, r, key, add + 1 + cnt(t->left)), l = t;
+        }
+        upd_cnt (t);
+    }
+
+    void insert(int value, int prior) {
+        std::shared_ptr<Node> t = std::make_shared<Node>(value, prior);
+        merge(root, root, t);
+    }
+
+    void print(std::shared_ptr<Node> node) {
+        //std::cout << '!';
+        if (!node) {
+            return;
+        }
+        print(node->left);
+        std::cout << node->value << " ";
+        print(node->right);
+    }
+    int sum(int l, int r) {
+        int ans = 0;
+        std::shared_ptr<Node> l1 = nullptr;
+        std::shared_ptr<Node> mid = nullptr;
+        std::shared_ptr<Node> r1 = nullptr;
+        split(root, l1, r1, r);
+        split(l1, l1, mid, l);
+        if (mid) {
+            ans = mid->sum;
+        }
+        merge(root, l1, mid);
+        merge(root, root, r1);
+        return ans;
+    }
+};
