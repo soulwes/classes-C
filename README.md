@@ -1,2 +1,2 @@
-# classes-C
+# classes-C++
 Useful C++ classes
