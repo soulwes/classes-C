@@ -1,0 +1,41 @@
+class Fenwick_tree{
+public:
+    std::vector<int> t;
+    int n;
+    int INF = 1000000000;
+
+    Fenwick_tree(std::vector<int> &a): n(a.size()) {
+        t.assign(n, INF);
+        for (int i = 0; i < static_cast<int>(a.size()); i++)
+            update(i, a[i]);
+    }
+
+    int Sum (int r) {
+        int ans = 0;
+        for (; r >= 0; r = (r & (r+1)) - 1)
+            ans += t[r];
+        return ans;
+    }
+
+    void inc (int i, int increm) {
+        for (; i < n; i = (i | (i+1)))
+            t[i] += increm;
+    }
+
+    int getmin (int r) {
+        int ans = INF;
+        for (; r >= 0; r = (r & (r+1)) - 1)
+            ans = std::min (ans, t[r]);
+        return ans;
+    }
+
+    void update (int i, int val) {
+        for (; i < n; i = (i | (i+1)))
+            t[i] = std::min (t[i], val);
+    }
+
+    int Sum (int l, int r) {
+        return Sum (r) - Sum (l - 1);
+    }
+
+};
