@@ -1,0 +1,137 @@
+std::map<std::pair<int, int>, int> cost;
+std::vector<std::vector<int>> edges;
+
+class LCA {
+public:
+    int n, l;
+    std::vector<int> tin, tout;
+    int timer;
+    std::vector<bool> visited;
+
+    std::vector <std::vector<std::pair<int, int>>> up;
+    std::vector <std::vector<std::pair<int, int>>> up1;
+
+    LCA (int n) : n(n) {
+        tin.resize (n+1);
+        tout.resize (n+1);
+        visited.resize(n+1);
+        l = 0;
+        while ((1<<l) <= n) {
+            ++l;
+        }
+        up = std::vector<std::vector<std::pair<int, int>>>(n+1, std::vector<std::pair<int, int>>(l + 1));
+        up1 = std::vector<std::vector<std::pair<int, int>>>(n+1, std::vector<std::pair<int, int>>(l + 1));
+    }
+
+    void time(int t) {
+        timer = t;
+    }
+
+    void visited_new() {
+        visited = std::vector<bool>(n+1);
+    }
+
+    void dfs (int v, int per) {
+        ++timer;
+        visited[v] = true;
+        tin[v] = timer;
+        up[v][0].first = per;
+        up[v][0].second = cost[{v, per}];
+        up1[v][0].first = per;
+        up1[v][0].second = cost[{v, per}];
+        for (int i=1; i<=l; ++i) {
+            up[v][i].first = up[up[v][i - 1].first][i - 1].first;
+            up[v][i].second = std::min(up[up[v][i - 1].first][i - 1].second, up[v][i - 1].second);
+            up1[v][i].first = up1[up1[v][i - 1].first][i - 1].first;
+            up1[v][i].second = std::max(up1[up1[v][i - 1].first][i - 1].second, up1[v][i - 1].second);
+        }
+        for (auto & node : edges[v]) {
+            if (!visited[node]) {
+                dfs(node, v);
+            }
+        }
+        ++timer;
+        tout[v] = timer;
+    }
+
+    bool upper (int a, int b) {
+        return tin[a] <= tin[b] && tout[a] >= tout[b];
+    }
+
+    int lca_min (int a, int b) {
+        int ans = 100000000;
+        bool flag1 = true, flag2 = true;
+        if (upper(a, b))
+            std::swap(a, b);
+        if (upper(a, b))
+            flag1 = false;
+        if (upper(b, a))
+            flag2 = false;
+        for (auto i = l; i >= 0; --i) {
+            if (up[a][i].first == 0)
+                continue;
+            if (!upper(up[a][i].first, b)) {
+                ans = std::min(ans, up[a][i].second);
+                a = up[a][i].first;
+            }
+        }
+        for (auto i = l; i >= 0; --i) {
+            if (up[b][i].first == 0)
+                continue;
+            if (!upper(up[b][i].first, up[a][0].first)) {
+                ans = std::min(ans, up[b][i].second);
+                b = up[b][i].first;
+            }
+        }
+        if (flag1)
+            ans = std::min(ans, up[a][0].second);
+        if (flag2)
+            ans = std::min(ans, up[b][0].second);
+        return ans;
+    }
+
+    int lca_max (int a, int b) {
+        int ans = -100000000;
+        bool flag1 = true, flag2 = true;
+        if (upper(a, b))
+            std::swap(a, b);
+        if (upper(a, b))
+            flag1 = false;
+        if (upper(b, a))
+            flag2 = false;
+        for (auto i = l; i >= 0; --i) {
+            if (up1[a][i].first == 0)
+                continue;
+            if (!upper(up1[a][i].first, b)) {
+                ans = std::max(ans, up1[a][i].second);
+                a = up1[a][i].first;
+            }
+        }
+        for (auto i = l; i >= 0; --i) {
+            if (up1[b][i].first == 0)
+                continue;
+            if (!upper(up1[b][i].first, up1[a][0].first)) {
+                ans = std::max(ans, up1[b][i].second);
+                b = up1[b][i].first;
+            }
+        }
+        if (flag1)
+            ans = std::max(ans, up1[a][0].second);
+        if (flag2)
+            ans = std::max(ans, up1[b][0].second);
+        return ans;
+    }
+
+    int lca_orig (int a, int b) {
+        if (upper (a, b))  return a;
+        if (upper (b, a))  return b;
+        for (auto i = l; i >= 0; --i) {
+            if (up[a][i].first == 0)
+                continue;
+            if (!upper(up[a][i].first, b)) {
+                a = up[a][i].first;
+            }
+        }
+        return up[a][0].first;
+    }
+};
